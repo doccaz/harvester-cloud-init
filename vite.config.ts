@@ -6,8 +6,8 @@ export default defineConfig(({ mode }) => {
   const env = loadEnv(mode, (process as any).cwd(), '');
   return {
     plugins: [react()],
-    // IMPORTANT: This must match your GitHub repository name for Pages to work
-    base: '/harvester-cloud-init/', 
+    // Use relative base path so the app works in any subdirectory (e.g. /harvester-cloud-init/)
+    base: './', 
     define: {
       'process.env.API_KEY': JSON.stringify(env.API_KEY)
     }
