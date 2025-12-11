@@ -1,7 +1,7 @@
 import React, { useState, useRef } from 'react';
 import { GoogleGenAI } from "@google/genai";
 import ReactMarkdown from 'react-markdown';
-import { Sparkles, Loader2, AlertTriangle, Copy, FileDown, Check } from 'lucide-react';
+import { Sparkles, Loader2, AlertTriangle, FileText, Copy, Download, FileDown, Check } from 'lucide-react';
 import { jsPDF } from 'jspdf';
 
 interface SummaryProps {

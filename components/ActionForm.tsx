@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { ActionType, Phase, CloudAction, WriteFileAction, RunCmdAction, PackageAction, UserAction, ServiceAction } from '../types';
-import { Plus, Package, User, Info } from 'lucide-react';
+import { Plus, FileText, Terminal, Package, User, Settings, Info } from 'lucide-react';
 import CodeEditor from './CodeEditor';
 
 interface ActionFormProps {

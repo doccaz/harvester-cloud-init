@@ -17,7 +17,7 @@ const phaseMap: Record<string, Phase> = {
   'post-install': Phase.POST_INSTALL,
 };
 
-const parseConfigObject = (configRoot: any, index: number): { config: CloudInitConfig, errors: string[], warnings: string[] } => {
+const parseConfigObject = (configRoot: any, index: number, total: number): { config: CloudInitConfig, errors: string[], warnings: string[] } => {
     const errors: string[] = [];
     const warnings: string[] = [];
     let configName = configRoot.name || `imported-config-${index + 1}`;
@@ -184,7 +184,7 @@ export const parseAndValidateYaml = (yamlStr: string): ValidationResult => {
 
   parsedDocs.forEach((doc, idx) => {
       if (!doc) return;
-      const result = parseConfigObject(doc, idx);
+      const result = parseConfigObject(doc, idx, parsedDocs.length);
       
       // If a document is completely invalid (critical errors), we might skip it or fail whole import
       // Here we collect errors but attempt to proceed with valid ones? 
