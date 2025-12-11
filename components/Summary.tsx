@@ -19,7 +19,12 @@ const Summary: React.FC<SummaryProps> = ({ yaml, currentSummary, onSummaryUpdate
   const contentRef = useRef<HTMLDivElement>(null);
 
   const generateSummary = async () => {
-    if (!process.env.API_KEY) {
+    // Safe access for process.env.API_KEY to work in both Vite (local) and Web Preview (CDN)
+    // In local Vite, 'process.env.API_KEY' is replaced by the define plugin.
+    // In Web Preview, 'process' might be undefined, so we check for it.
+    const apiKey = typeof process !== 'undefined' ? process.env.API_KEY : undefined;
+
+    if (!apiKey) {
       setError("API Key not configured in environment.");
       return;
     }
@@ -27,7 +32,7 @@ const Summary: React.FC<SummaryProps> = ({ yaml, currentSummary, onSummaryUpdate
     setLoading(true);
     setError(null);
     try {
-      const ai = new GoogleGenAI({ apiKey: process.env.API_KEY });
+      const ai = new GoogleGenAI({ apiKey: apiKey });
       const model = 'gemini-2.5-flash';
       
       const prompt = `
