@@ -26,7 +26,7 @@
 </head>
   <body class="bg-gray-950 text-gray-100 antialiased h-screen overflow-hidden">
     <div id="root" class="h-full"></div>
-    <!-- Vite expects the source path to be absolute (/index.tsx). It will rewrite this to a relative path (./assets/...) in the build output. -->
-    <script type="module" src="/index.tsx"></script>
+    <!-- Use relative path ./index.tsx so it resolves within the /harvester-cloud-init/ subdirectory -->
+    <script type="module" src="./index.tsx"></script>
   </body>
 </html>
