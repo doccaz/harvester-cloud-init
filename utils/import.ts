@@ -1,4 +1,4 @@
-import jsyaml from 'js-yaml';
+import * as jsyaml from 'js-yaml';
 import { CloudInitConfig, Phase, ActionType, CloudAction, NodeSelector } from '../types';
 
 interface ValidationResult {

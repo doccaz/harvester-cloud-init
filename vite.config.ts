@@ -3,13 +3,14 @@ import react from '@vitejs/plugin-react';
 
 export default defineConfig(({ mode }) => {
   // Use a safer cwd check for environments where process might be restricted
-  const cwd = typeof process !== 'undefined' && process.cwd ? process.cwd() : '.';
+  const cwd = typeof process !== 'undefined' && (process as any).cwd ? (process as any).cwd() : '.';
   
   // Load env file based on `mode` in the current working directory.
   // Set the third parameter to '' to load all env regardless of the `VITE_` prefix.
   const env = loadEnv(mode, cwd, '');
   
   return {
+    base: './', // Ensures assets are linked relatively for GitHub Pages compatibility
     plugins: [react()],
     server: {
       port: 3000

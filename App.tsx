@@ -1,5 +1,5 @@
 import React, { useState, useMemo } from 'react';
-import { AppState, ActionType, Phase, CloudAction, NodeSelector, CloudInitConfig } from './types';
+import { AppState, CloudAction, NodeSelector, CloudInitConfig } from './types';
 import ActionForm from './components/ActionForm';
 import ActionItem from './components/ActionItem';
 import Summary from './components/Summary';
@@ -8,25 +8,20 @@ import HowTo from './components/HowTo';
 import About from './components/About';
 import { generateYaml } from './utils/yaml';
 import { 
-  FileText, 
   Trash2, 
-  ArrowUp, 
-  ArrowDown, 
   Code, 
-  Layers, 
-  Box, 
-  Menu,
-  FileCode,
-  Server,
   FileUp,
   Plus,
-  BookOpen,
-  Github,
   Download,
   Sparkles,
   Edit3,
   HelpCircle,
-  Info
+  Info,
+  FileCode,
+  Box,
+  Menu,
+  Layers,
+  Server
 } from 'lucide-react';
 
 enum Tab {
