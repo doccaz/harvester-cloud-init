@@ -1,0 +1,6 @@
+{
+  "name": "Harvester CloudInit Architect",
+  "version": "1.0.0",
+  "description": "A visual editor and validator for Harvester/Elemental CloudInit configurations. Design complex node configurations with drag-and-drop actions, node selectors, and AI-powered summaries.",
+  "requestFramePermissions": []
+}
