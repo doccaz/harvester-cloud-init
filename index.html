@@ -26,7 +26,7 @@
 </head>
   <body class="bg-gray-950 text-gray-100 antialiased h-screen overflow-hidden">
     <div id="root" class="h-full"></div>
-    <!-- Use relative path ./index.tsx so Vite resolves it correctly for subdirectories -->
-    <script type="module" src="./index.tsx"></script>
+    <!-- Vite expects the source path to be absolute (/index.tsx). It will rewrite this to a relative path (./assets/...) in the build output. -->
+    <script type="module" src="/index.tsx"></script>
   </body>
 </html>
