@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { ActionType, CloudAction, WriteFileAction, RunCmdAction, PackageAction, UserAction, ServiceAction, Phase } from '../types';
-import { ArrowUp, ArrowDown, Trash2, ChevronDown, ChevronRight, FileText, Terminal, Package, User, Settings, Shield, Key, Edit2, Check, X, Save } from 'lucide-react';
+import { ArrowUp, ArrowDown, Trash2, ChevronDown, ChevronRight, FileText, Terminal, Package, User, Settings, Shield, Key, Edit2, X, Save } from 'lucide-react';
 import CodeEditor from './CodeEditor';
 
 interface ActionItemProps {

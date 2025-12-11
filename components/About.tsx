@@ -1,5 +1,5 @@
 import React from 'react';
-import { Layers, Cloud, Shield, Terminal, ExternalLink, Server, CheckCircle } from 'lucide-react';
+import { Layers, Shield, Terminal, ExternalLink } from 'lucide-react';
 
 const About: React.FC = () => {
   return (
