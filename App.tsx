@@ -38,6 +38,15 @@ enum Tab {
   ABOUT = 'about'
 }
 
+const HarvesterLogo = () => (
+  <svg width="32" height="32" viewBox="0 0 32 32" fill="none" xmlns="http://www.w3.org/2000/svg" className="mr-0">
+    <path d="M16 2L2 9L16 16L30 9L16 2Z" fill="#30BA78"/>
+    <path d="M2 23L16 30L30 23V9L16 16L2 9V23Z" fill="#248F5B"/>
+    <path d="M16 16L30 9V23L16 30V16Z" fill="#1A6D46"/>
+    <path d="M16 16L2 9V23L16 30V16Z" fill="#30BA78" fillOpacity="0.8"/>
+  </svg>
+);
+
 const App: React.FC = () => {
   const [activeTab, setActiveTab] = useState<Tab>(Tab.EDITOR);
   
@@ -162,15 +171,6 @@ const App: React.FC = () => {
   };
 
   const generatedYaml = useMemo(() => generateYaml(state.configs), [state.configs]);
-
-  const HarvesterLogo = () => (
-    <svg width="32" height="32" viewBox="0 0 32 32" fill="none" xmlns="http://www.w3.org/2000/svg" className="mr-0">
-      <path d="M16 2L2 9L16 16L30 9L16 2Z" fill="#30BA78"/>
-      <path d="M2 23L16 30L30 23V9L16 16L2 9V23Z" fill="#248F5B"/>
-      <path d="M16 16L30 9V23L16 30V16Z" fill="#1A6D46"/>
-      <path d="M16 16L2 9V23L16 30V16Z" fill="#30BA78" fillOpacity="0.8"/>
-    </svg>
-  );
 
   return (
     <div className="flex flex-col h-screen bg-[#0C322C] text-gray-100 font-sans">
@@ -441,7 +441,7 @@ const App: React.FC = () => {
 
       {/* Version Footer */}
       <div className="fixed bottom-3 left-6 text-[10px] text-gray-600 font-mono z-50">
-        v1.0.0
+        v1.0.1
       </div>
 
       {/* Diagonal GitHub Ribbon (Bottom Right) */}

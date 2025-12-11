@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { Layers, Cloud, Shield, Terminal, ExternalLink, Server, CheckCircle } from 'lucide-react';
 
 const About: React.FC = () => {
@@ -71,7 +71,7 @@ const About: React.FC = () => {
           <div className="flex items-center gap-4 mb-2">
             <h2 className="text-2xl font-bold text-white">About This Tool</h2>
             <span className="px-2.5 py-0.5 rounded-full bg-emerald-500/10 border border-emerald-500/20 text-emerald-400 text-xs font-mono font-medium">
-              v1.0.0
+              v1.0.1
             </span>
           </div>
           <p className="text-gray-400 leading-relaxed max-w-3xl">

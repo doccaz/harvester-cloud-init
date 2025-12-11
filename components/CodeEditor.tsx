@@ -51,8 +51,6 @@ const CodeEditor: React.FC<CodeEditorProps> = ({
       }
       if (highlightRef.current) {
         highlightRef.current.scrollTop = scrollTop;
-        // Sync horizontal scroll so highlights move with text if needed, 
-        // though typically background highlights should span full scroll width.
         highlightRef.current.scrollLeft = scrollLeft;
       }
     }
@@ -64,7 +62,7 @@ const CodeEditor: React.FC<CodeEditorProps> = ({
     setTimeout(() => setCopied(false), 2000);
   };
 
-  const EditorControls = () => (
+  const renderEditorControls = () => (
     <div className="flex items-center gap-2">
       <button
         onClick={handleCopy}
@@ -85,7 +83,8 @@ const CodeEditor: React.FC<CodeEditorProps> = ({
   );
 
   // Shared inner content for consistency
-  const InnerEditor = ({ paddingClass }: { paddingClass: string }) => (
+  // Use a render function instead of a Component to avoid focus loss on re-render
+  const renderInnerEditor = (paddingClass: string) => (
     <div className="flex flex-1 relative min-h-0 bg-gray-950 group">
       {/* Gutter */}
       <div 
@@ -107,7 +106,6 @@ const CodeEditor: React.FC<CodeEditorProps> = ({
             </div>
           );
         })}
-        {/* Extra space at bottom to match textarea scrolling feel */}
         <div className="h-8"></div>
       </div>
       
@@ -129,7 +127,6 @@ const CodeEditor: React.FC<CodeEditorProps> = ({
                     style={{ height: '1.5rem' }}
                     className={`w-full transition-colors duration-200 ${isError ? 'bg-red-500/30 border-l-4 border-red-500' : ''}`}
                 >
-                    {/* Zero-width space ensures empty lines still have height */}
                     &#8203;
                 </div>
               );
@@ -162,12 +159,12 @@ const CodeEditor: React.FC<CodeEditorProps> = ({
           </h3>
           <div className="flex items-center gap-4">
             <span className="text-xs text-gray-500">Press ESC to close</span>
-            <EditorControls />
+            {renderEditorControls()}
           </div>
         </div>
         <div className="flex-1 p-6 overflow-hidden flex flex-col">
            <div className="flex-1 flex flex-col border border-gray-800 rounded-lg overflow-hidden bg-gray-950 shadow-2xl">
-             <InnerEditor paddingClass="pl-4 pr-4" />
+             {renderInnerEditor("pl-4 pr-4")}
            </div>
         </div>
       </div>
@@ -180,16 +177,16 @@ const CodeEditor: React.FC<CodeEditorProps> = ({
       {label && (
         <div className="flex justify-between items-center px-3 py-2 bg-gray-800/50 border-b border-gray-700/50">
           <span className="text-xs font-medium text-gray-400 uppercase tracking-wider">{label}</span>
-          <EditorControls />
+          {renderEditorControls()}
         </div>
       )}
       <div className={`relative flex-1 flex flex-col min-h-0 ${minHeight} group`}>
         {!label && (
            <div className="absolute top-2 right-4 z-20 opacity-0 group-hover:opacity-100 transition-opacity">
-              <EditorControls />
+              {renderEditorControls()}
            </div>
         )}
-        <InnerEditor paddingClass="pl-3 pr-3 pb-3" />
+        {renderInnerEditor("pl-3 pr-3 pb-3")}
       </div>
     </div>
   );
