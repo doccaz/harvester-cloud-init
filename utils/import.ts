@@ -17,7 +17,7 @@ const phaseMap: Record<string, Phase> = {
   'post-install': Phase.POST_INSTALL,
 };
 
-const parseConfigObject = (configRoot: any, index: number): { config: CloudInitConfig, errors: string[], warnings: string[] } => {
+const parseConfigObject = (configRoot: any, index: number, total: number): { config: CloudInitConfig, errors: string[], warnings: string[] } => {
     const errors: string[] = [];
     const warnings: string[] = [];
     let configName = configRoot.name || `imported-config-${index + 1}`;
@@ -48,6 +48,7 @@ const parseConfigObject = (configRoot: any, index: number): { config: CloudInitC
                 stagesRoot = {}; 
             }
         }
+        warnings.push(`Total size ${total}`);
     }
 
     // Extract Selectors
