@@ -1,17 +1,16 @@
-<div align="center">
-<img width="1200" height="475" alt="GHBanner" src="https://github.com/user-attachments/assets/0aa67016-6eaf-458a-adb2-6e31a0763ed6" />
-</div>
 
-# Run and deploy your AI Studio app
+# Harvester/Elemental CloudInit CRD Visual Editor
 
-This contains everything you need to run your app locally.
 
-View your app in AI Studio: https://ai.studio/apps/drive/11C0W5JegTV1eaFOKc2jYigEAYKOGJ-6q
+## See it live here: https://doccaz.github.io/harvester-cloud-init/
+
+(AI feature disabled because it needs a valid Gemini API Key)
 
 ## Run Locally
 
 **Prerequisites:**  Node.js
 
+This contains everything you need to run your app locally.
 
 1. Install dependencies:
    `npm install`
