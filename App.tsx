@@ -176,7 +176,7 @@ const App: React.FC = () => {
           <HarvesterLogo />
         </div>
         <div>
-          <h1 className="text-xl font-bold tracking-tight text-white">SUSE Harvester CloudInit Architect</h1>
+          <h1 className="text-xl font-bold tracking-tight text-white">SUSE Harvester/Elemental CloudInit CRD Architect</h1>
           <p className="text-xs text-[#30BA78] font-medium tracking-wide">Visual Configuration Editor</p>
         </div>
         <div className="ml-auto flex bg-[#0C322C] rounded-lg p-1 border border-[#1A453C] mr-8">
@@ -436,7 +436,7 @@ const App: React.FC = () => {
 
       {/* Version Footer */}
       <div className="fixed bottom-3 left-6 text-[10px] text-gray-600 font-mono z-50">
-        v1.0.1
+        v1.0.2
       </div>
 
       {/* Diagonal GitHub Ribbon (Bottom Right) */}

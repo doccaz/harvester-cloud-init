@@ -103,43 +103,45 @@ const ActionForm: React.FC<ActionFormProps> = ({ onAdd }) => {
 
   return (
     <div className="bg-gray-800 p-4 rounded-lg border border-gray-700 shadow-xl space-y-4">
-      <div className="flex gap-4 border-b border-gray-700 pb-4 mb-4">
-        <div className="flex-1">
-          <label className="block text-xs uppercase text-gray-400 font-bold mb-1">Execution Phase</label>
-          <select 
-            className="w-full bg-gray-900 border border-gray-700 rounded px-3 py-2 text-sm text-gray-200 focus:outline-none focus:border-emerald-500 transition-colors"
-            value={phase}
-            onChange={(e) => setPhase(e.target.value as Phase)}
-          >
-            {Object.values(Phase).map((p) => (
-              <option key={p} value={p}>{p}</option>
-            ))}
-          </select>
-          
-          <div className="mt-3 bg-gray-900/50 rounded border border-gray-700 p-3 flex gap-3">
-             <Info className="text-emerald-400 flex-shrink-0" size={16} />
-             <div>
-                <p className="text-xs text-gray-300 font-medium mb-1 leading-snug">{phaseInfo.desc}</p>
-                <p className="text-[11px] text-gray-500 leading-tight">
-                   <span className="text-orange-400 font-bold uppercase mr-1">Limit:</span>
-                   {phaseInfo.limit}
-                </p>
-             </div>
+      <div className="border-b border-gray-700 pb-4 mb-4">
+        <div className="flex gap-4 mb-4">
+          <div className="flex-1">
+            <label className="block text-xs uppercase text-gray-400 font-bold mb-1">Execution Phase</label>
+            <select 
+              className="w-full bg-gray-900 border border-gray-700 rounded px-3 py-2 text-sm text-gray-200 focus:outline-none focus:border-emerald-500 transition-colors"
+              value={phase}
+              onChange={(e) => setPhase(e.target.value as Phase)}
+            >
+              {Object.values(Phase).map((p) => (
+                <option key={p} value={p}>{p}</option>
+              ))}
+            </select>
+          </div>
+          <div className="flex-1">
+            <label className="block text-xs uppercase text-gray-400 font-bold mb-1">Action Type</label>
+            <select 
+              className="w-full bg-gray-900 border border-gray-700 rounded px-3 py-2 text-sm text-gray-200 focus:outline-none focus:border-emerald-500 transition-colors"
+              value={type}
+              onChange={(e) => setType(e.target.value as ActionType)}
+            >
+              <option value={ActionType.RUN_CMD}>Run Command</option>
+              <option value={ActionType.WRITE_FILE}>Write File</option>
+              <option value={ActionType.SERVICE}>System Service</option>
+              <option value={ActionType.PACKAGE}>Install Package</option>
+              <option value={ActionType.USER}>Create User</option>
+            </select>
           </div>
         </div>
-        <div className="flex-1">
-          <label className="block text-xs uppercase text-gray-400 font-bold mb-1">Action Type</label>
-          <select 
-            className="w-full bg-gray-900 border border-gray-700 rounded px-3 py-2 text-sm text-gray-200 focus:outline-none focus:border-emerald-500 transition-colors"
-            value={type}
-            onChange={(e) => setType(e.target.value as ActionType)}
-          >
-            <option value={ActionType.RUN_CMD}>Run Command</option>
-            <option value={ActionType.WRITE_FILE}>Write File</option>
-            <option value={ActionType.SERVICE}>System Service</option>
-            <option value={ActionType.PACKAGE}>Install Package</option>
-            <option value={ActionType.USER}>Create User</option>
-          </select>
+
+        <div className="bg-gray-900/50 rounded border border-gray-700 p-3 flex gap-3">
+            <Info className="text-emerald-400 flex-shrink-0" size={16} />
+            <div>
+              <p className="text-xs text-gray-300 font-medium mb-1 leading-snug">{phaseInfo.desc}</p>
+              <p className="text-[11px] text-gray-500 leading-tight">
+                  <span className="text-orange-400 font-bold uppercase mr-1">Limit:</span>
+                  {phaseInfo.limit}
+              </p>
+            </div>
         </div>
       </div>
 
