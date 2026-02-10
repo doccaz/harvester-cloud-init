@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { ActionType, Phase, CloudAction, WriteFileAction, RunCmdAction, ServiceAction } from '../types';
-import { X, Server, Network, FileText, Terminal, Check, ChevronRight, Lock, HardDrive, Trash2, Plus, AlertCircle } from 'lucide-react';
+import { X, Server, Network, FileText, Terminal, Check, ChevronRight, Lock, HardDrive, Trash2, AlertCircle } from 'lucide-react';
 
 interface TemplateModalProps {
   isOpen: boolean;
