@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { ActionType, Phase, CloudAction, WriteFileAction, RunCmdAction, ServiceAction } from '../types';
-import { X, Server, Network, FileText, Terminal, Check, ChevronRight, Lock, HardDrive, Trash2, AlertCircle } from 'lucide-react';
+import { X, Server, Network, FileText, Terminal, Check, ChevronRight, Lock, HardDrive, Trash2, AlertCircle, Share2 } from 'lucide-react';
 
 interface TemplateModalProps {
   isOpen: boolean;
@@ -14,7 +14,7 @@ interface VP {
 }
 
 const TemplateModal: React.FC<TemplateModalProps> = ({ isOpen, onClose, onAddActions }) => {
-  const [activeTemplate, setActiveTemplate] = useState<'kernel' | 'vlan' | 'sftp' | 'ndm' | null>(null);
+  const [activeTemplate, setActiveTemplate] = useState<'kernel' | 'vlan' | 'bonding' | 'sftp' | 'ndm' | null>(null);
   
   // Kernel/Grub Params State
   const [kernelParams, setKernelParams] = useState('');
@@ -28,8 +28,24 @@ const TemplateModal: React.FC<TemplateModalProps> = ({ isOpen, onClose, onAddAct
   const [vlanGw, setVlanGw] = useState('');
   const [vlanDns, setVlanDns] = useState('');
   const [createParentBridge, setCreateParentBridge] = useState(false);
-  const [bridgeName, setBridgeName] = useState('mgmt-br'); // New: Custom Bridge Name
+  const [bridgeName, setBridgeName] = useState(''); 
   const [vlanMethod, setVlanMethod] = useState<'nmcli' | 'file'>('file');
+
+  // Bonding State
+  const [bondName, setBondName] = useState('bond0');
+  const [bondSlaves, setBondSlaves] = useState('');
+  const [bondMode, setBondMode] = useState('802.3ad');
+  const [bondIp, setBondIp] = useState('');
+  const [bondGw, setBondGw] = useState('');
+  const [bondDns, setBondDns] = useState('');
+  const [bondMethod, setBondMethod] = useState<'auto' | 'manual'>('manual');
+
+  // Bonding VLAN State
+  const [bondVlanEnabled, setBondVlanEnabled] = useState(false);
+  const [bondVlanId, setBondVlanId] = useState('');
+  const [bondVlanIp, setBondVlanIp] = useState('');
+  const [bondVlanGw, setBondVlanGw] = useState('');
+  const [bondVlanDns, setBondVlanDns] = useState('');
 
   // External Disk (NDM) State
   const [ndmBlacklistVP, setNdmBlacklistVP] = useState<VP[]>([]);
@@ -47,12 +63,43 @@ const TemplateModal: React.FC<TemplateModalProps> = ({ isOpen, onClose, onAddAct
 
   const generateId = () => Math.random().toString(36).substr(2, 9);
 
+  const generateUUID = () => {
+    if (typeof crypto !== 'undefined' && crypto.randomUUID) {
+      return crypto.randomUUID();
+    }
+    return 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, function(c) {
+      var r = Math.random() * 16 | 0, v = c == 'x' ? r : (r & 0x3 | 0x8);
+      return v.toString(16);
+    });
+  };
+
+  const hasNdmConfig = ndmBlacklistVP.length > 0 || ndmBlacklistWwid.length > 0 || ndmExceptionVP.length > 0 || ndmExceptionWwid.length > 0 || ndmDefaults;
+
+  const isFormValid = () => {
+    switch (activeTemplate) {
+      case 'kernel':
+        return !!(kernelParams.trim() || grubEntry.trim());
+      case 'sftp':
+        return true;
+      case 'ndm':
+        return hasNdmConfig;
+      case 'vlan':
+        return !!(vlanId.trim() && vlanIp.trim());
+      case 'bonding':
+        if (!bondName.trim() || !bondSlaves.trim()) return false;
+        if (bondVlanEnabled && (!bondVlanId.trim() || !bondVlanIp.trim())) return false;
+        return true;
+      default:
+        return false;
+    }
+  };
+
   const handleApply = () => {
+    if (!isFormValid()) return;
+
     const actions: CloudAction[] = [];
 
     if (activeTemplate === 'kernel') {
-       if (!kernelParams && !grubEntry) return;
-
        // Updated to match Harvester HCI docs: use grub2-editenv on cos-state
        let cmd = 'mount -o remount,rw /run/initramfs/cos-state';
        let editEnvCmd = 'grub2-editenv /run/initramfs/cos-state/grub_oem_env set';
@@ -81,19 +128,13 @@ const TemplateModal: React.FC<TemplateModalProps> = ({ isOpen, onClose, onAddAct
         } as WriteFileAction);
     }
     else if (activeTemplate === 'ndm') {
-        const hasBlacklist = ndmBlacklistVP.length > 0 || ndmBlacklistWwid.length > 0;
-        const hasExceptions = ndmExceptionVP.length > 0 || ndmExceptionWwid.length > 0;
-
-        // Even if no blacklist/exceptions, user might just want defaults
-        if (!hasBlacklist && !hasExceptions && !ndmDefaults) return;
-
         let content = '';
         
         if (ndmDefaults) {
             content += 'defaults {\n    user_friendly_names yes\n    find_multipaths yes\n}\n\n';
         }
 
-        if (hasBlacklist) {
+        if (ndmBlacklistVP.length > 0 || ndmBlacklistWwid.length > 0) {
             content += 'blacklist {\n';
             ndmBlacklistVP.forEach(vp => {
                 content += `    device {\n        vendor "${vp.vendor}"\n        product "${vp.product}"\n    }\n`;
@@ -104,7 +145,7 @@ const TemplateModal: React.FC<TemplateModalProps> = ({ isOpen, onClose, onAddAct
             content += '}\n\n';
         }
 
-        if (hasExceptions) {
+        if (ndmExceptionVP.length > 0 || ndmExceptionWwid.length > 0) {
             content += 'blacklist_exceptions {\n';
             ndmExceptionVP.forEach(vp => {
                 content += `    device {\n        vendor "${vp.vendor}"\n        product "${vp.product}"\n    }\n`;
@@ -146,15 +187,16 @@ const TemplateModal: React.FC<TemplateModalProps> = ({ isOpen, onClose, onAddAct
         } as ServiceAction);
     }
     else if (activeTemplate === 'vlan') {
-       if (!vlanId || !vlanIp) return;
-       
        const finalVlanName = vlanName || `vlan-${vlanId}`;
-       const finalParent = createParentBridge ? bridgeName : vlanParent;
+       // If bridgeName is empty, use the requested default format: bridge-<ID>
+       const defaultBridgeName = `bridge-${vlanId}`;
+       const finalBridgeName = bridgeName || defaultBridgeName;
+       const finalParent = createParentBridge ? finalBridgeName : vlanParent;
        
        if (createParentBridge) {
-          const bridgeConnId = `bridge-${bridgeName}`;
+          const bridgeConnId = `bridge-${finalBridgeName}`;
           if (vlanMethod === 'file') {
-             let bridgeContent = `[connection]\nid=${bridgeConnId}\ntype=bridge\ninterface-name=${bridgeName}\n\n`;
+             let bridgeContent = `[connection]\nid=${bridgeConnId}\nuuid=${generateUUID()}\ntype=bridge\ninterface-name=${finalBridgeName}\n\n`;
              bridgeContent += `[ethernet]\n\n`;
              bridgeContent += `[bridge]\nforward-delay=0\nstp=false\nvlan-filtering=true\nvlan-default-pvid=1\nvlans=${vlanId}\n\n`;
              bridgeContent += `[ipv4]\nmethod=disabled\n\n`;
@@ -162,7 +204,7 @@ const TemplateModal: React.FC<TemplateModalProps> = ({ isOpen, onClose, onAddAct
 
              actions.push({
                  id: generateId(),
-                 phase: Phase.POST_INSTALL,
+                 phase: Phase.BOOT,
                  type: ActionType.WRITE_FILE,
                  path: `/etc/NetworkManager/system-connections/${bridgeConnId}.nmconnection`,
                  content: bridgeContent,
@@ -175,13 +217,13 @@ const TemplateModal: React.FC<TemplateModalProps> = ({ isOpen, onClose, onAddAct
                  id: generateId(),
                  phase: Phase.BOOT,
                  type: ActionType.RUN_CMD,
-                 command: `nmcli con add type bridge con-name ${bridgeConnId} ifname ${bridgeName} bridge.vlan-filtering yes bridge.vlans ${vlanId} ipv4.method disabled ipv6.method disabled`
+                 command: `nmcli con add type bridge con-name ${bridgeConnId} ifname ${finalBridgeName} bridge.vlan-filtering yes bridge.vlans ${vlanId} ipv4.method disabled ipv6.method disabled`
              });
           }
        }
 
        if (vlanMethod === 'file') {
-           let content = `[connection]\nid=${finalVlanName}\ntype=vlan\n\n`;
+           let content = `[connection]\nid=${finalVlanName}\nuuid=${generateUUID()}\ntype=vlan\n\n`;
            content += `[ethernet]\n\n`;
            content += `[vlan]\nflags=1\nid=${vlanId}\nparent=${finalParent}\n\n`;
            content += `[ipv4]\nmethod=manual\naddress1=${vlanIp}`;
@@ -194,7 +236,7 @@ const TemplateModal: React.FC<TemplateModalProps> = ({ isOpen, onClose, onAddAct
            
            actions.push({
                id: generateId(),
-               phase: Phase.POST_INSTALL,
+               phase: Phase.BOOT,
                type: ActionType.WRITE_FILE,
                path: `/etc/NetworkManager/system-connections/${finalVlanName}.nmconnection`,
                content,
@@ -217,13 +259,94 @@ const TemplateModal: React.FC<TemplateModalProps> = ({ isOpen, onClose, onAddAct
            } as RunCmdAction);
        }
     }
+    else if (activeTemplate === 'bonding') {
+        const slaves = bondSlaves.split(/[ ,;]+/).filter(Boolean);
+        const connectionId = bondName;
+        
+        // 1. Generate Master Bond Config
+        let bondContent = `[connection]\nid=${connectionId}\nuuid=${generateUUID()}\ntype=bond\ninterface-name=${bondName}\n\n`;
+        bondContent += `[bond]\nmode=${bondMode}\nmiimon=100\n\n`;
+        
+        bondContent += `[ipv4]\nmethod=${bondMethod}\n`;
+        if (bondMethod === 'manual' && bondIp) {
+            bondContent += `address1=${bondIp}`;
+            if (bondGw) bondContent += `,${bondGw}`;
+            bondContent += `\n`;
+            if (bondDns) {
+                const formattedDns = bondDns.split(/[ ,;]+/).filter(Boolean).join(';') + ';';
+                bondContent += `dns=${formattedDns}\n`;
+            }
+        } else if (bondMethod === 'manual' && !bondIp) {
+            bondContent = bondContent.replace('method=manual', 'method=disabled');
+        }
+
+        bondContent += `\n[ipv6]\nmethod=disabled\n`;
+
+        actions.push({
+            id: generateId(),
+            phase: Phase.BOOT,
+            type: ActionType.WRITE_FILE,
+            path: `/etc/NetworkManager/system-connections/${connectionId}.nmconnection`,
+            content: bondContent,
+            permissions: '0600',
+            owner: 'root:root',
+            encoding: 'text'
+        } as WriteFileAction);
+
+        // 2. Generate Slave Configs
+        slaves.forEach(slave => {
+            let slaveContent = `[connection]\nid=${connectionId}-slave-${slave}\nuuid=${generateUUID()}\ntype=ethernet\ninterface-name=${slave}\nmaster=${bondName}\nslave-type=bond\n\n`;
+            slaveContent += `[ethernet]\n`;
+
+            actions.push({
+                id: generateId(),
+                phase: Phase.BOOT,
+                type: ActionType.WRITE_FILE,
+                path: `/etc/NetworkManager/system-connections/${connectionId}-slave-${slave}.nmconnection`,
+                content: slaveContent,
+                permissions: '0600',
+                owner: 'root:root',
+                encoding: 'text'
+            } as WriteFileAction);
+        });
+
+        // 3. Optional VLAN on Bond
+        if (bondVlanEnabled && bondVlanId && bondVlanIp) {
+            const vlanConnName = `${bondName}.${bondVlanId}`;
+            let vlanContent = `[connection]\nid=${vlanConnName}\nuuid=${generateUUID()}\ntype=vlan\ninterface-name=${vlanConnName}\n\n`;
+            vlanContent += `[vlan]\nparent=${bondName}\nid=${bondVlanId}\n\n`;
+            
+            vlanContent += `[ipv4]\nmethod=manual\naddress1=${bondVlanIp}`;
+            if (bondVlanGw) vlanContent += `,${bondVlanGw}`;
+            vlanContent += `\n`;
+            if (bondVlanDns) {
+                const formattedDns = bondVlanDns.split(/[ ,;]+/).filter(Boolean).join(';') + ';';
+                vlanContent += `dns=${formattedDns}\n`;
+            }
+            vlanContent += `\n[ipv6]\nmethod=disabled\n`;
+
+            actions.push({
+                id: generateId(),
+                phase: Phase.BOOT,
+                type: ActionType.WRITE_FILE,
+                path: `/etc/NetworkManager/system-connections/${vlanConnName}.nmconnection`,
+                content: vlanContent,
+                permissions: '0600',
+                owner: 'root:root',
+                encoding: 'text'
+            } as WriteFileAction);
+        }
+    }
 
     onAddActions(actions);
     onClose();
+    
     // Reset all state
     setActiveTemplate(null);
     setKernelParams('');
     setGrubEntry('');
+    
+    // Reset VLAN
     setVlanParent('eth0');
     setVlanId('');
     setVlanName('');
@@ -231,7 +354,22 @@ const TemplateModal: React.FC<TemplateModalProps> = ({ isOpen, onClose, onAddAct
     setVlanGw('');
     setVlanDns('');
     setCreateParentBridge(false);
-    setBridgeName('mgmt-br');
+    setBridgeName('');
+    
+    // Reset Bonding
+    setBondName('bond0');
+    setBondSlaves('');
+    setBondMode('802.3ad');
+    setBondIp('');
+    setBondGw('');
+    setBondDns('');
+    setBondMethod('manual');
+    setBondVlanEnabled(false);
+    setBondVlanId('');
+    setBondVlanIp('');
+    setBondVlanGw('');
+    setBondVlanDns('');
+
     // Reset NDM
     setNdmBlacklistVP([]);
     setNdmBlacklistWwid([]);
@@ -271,8 +409,6 @@ const TemplateModal: React.FC<TemplateModalProps> = ({ isOpen, onClose, onAddAct
       if (listName === 'exVP') setNdmExceptionVP(ndmExceptionVP.filter((_, i) => i !== index));
       if (listName === 'exWwid') setNdmExceptionWwid(ndmExceptionWwid.filter((_, i) => i !== index));
   };
-
-  const hasNdmConfig = ndmBlacklistVP.length > 0 || ndmBlacklistWwid.length > 0 || ndmExceptionVP.length > 0 || ndmExceptionWwid.length > 0 || ndmDefaults;
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 backdrop-blur-sm p-4 animate-in fade-in duration-200">
@@ -315,6 +451,17 @@ const TemplateModal: React.FC<TemplateModalProps> = ({ isOpen, onClose, onAddAct
               </button>
 
               <button 
+                onClick={() => setActiveTemplate('bonding')}
+                className={`w-full text-left px-3 py-3 rounded-lg flex items-center justify-between group transition-colors ${activeTemplate === 'bonding' ? 'bg-emerald-900/30 border border-emerald-500/30 text-emerald-100' : 'hover:bg-gray-700/50 text-gray-400'}`}
+              >
+                 <div className="flex items-center">
+                    <Share2 size={16} className="mr-2" />
+                    <span className="text-sm font-medium">Configure Bonding</span>
+                 </div>
+                 {activeTemplate === 'bonding' && <ChevronRight size={14} className="text-emerald-400" />}
+              </button>
+
+              <button 
                 onClick={() => setActiveTemplate('sftp')}
                 className={`w-full text-left px-3 py-3 rounded-lg flex items-center justify-between group transition-colors ${activeTemplate === 'sftp' ? 'bg-emerald-900/30 border border-emerald-500/30 text-emerald-100' : 'hover:bg-gray-700/50 text-gray-400'}`}
               >
@@ -351,6 +498,9 @@ const TemplateModal: React.FC<TemplateModalProps> = ({ isOpen, onClose, onAddAct
                     <h4 className="text-white font-bold text-lg mb-2">Grub & Kernel Configuration</h4>
                     <p className="text-xs text-gray-400 mb-4">
                        Modifies the <code>grub_oem_env</code> file in <code>/run/initramfs/cos-state</code> to update kernel parameters or changing the default boot entry.
+                    </p>
+                    <p className="text-[11px] text-amber-400 mb-2 font-medium">
+                        * At least one field must be filled.
                     </p>
                     
                     <div>
@@ -558,7 +708,7 @@ const TemplateModal: React.FC<TemplateModalProps> = ({ isOpen, onClose, onAddAct
                            />
                         </div>
                         <div>
-                           <label className="block text-xs uppercase text-gray-500 font-bold mb-1">VLAN ID</label>
+                           <label className="block text-xs uppercase text-emerald-400 font-bold mb-1">VLAN ID *</label>
                            <input 
                              className="w-full bg-gray-900 border border-gray-700 rounded px-3 py-2 text-sm text-gray-200 font-mono focus:border-emerald-500 focus:outline-none"
                              placeholder="100"
@@ -580,7 +730,7 @@ const TemplateModal: React.FC<TemplateModalProps> = ({ isOpen, onClose, onAddAct
                     </div>
 
                     <div>
-                       <label className="block text-xs uppercase text-gray-500 font-bold mb-1">IP Address (CIDR)</label>
+                       <label className="block text-xs uppercase text-emerald-400 font-bold mb-1">IP Address (CIDR) *</label>
                        <input 
                          className="w-full bg-gray-900 border border-gray-700 rounded px-3 py-2 text-sm text-gray-200 font-mono focus:border-emerald-500 focus:outline-none"
                          placeholder="192.168.10.5/24"
@@ -629,10 +779,11 @@ const TemplateModal: React.FC<TemplateModalProps> = ({ isOpen, onClose, onAddAct
                                    <label className="block text-xs uppercase text-gray-500 font-bold mb-1">Bridge Interface Name</label>
                                    <input 
                                      className="w-full bg-gray-900 border border-gray-700 rounded px-3 py-2 text-sm text-gray-200 font-mono focus:border-emerald-500 focus:outline-none"
-                                     placeholder="mgmt-br"
+                                     placeholder={`bridge-${vlanId || 'ID'}`}
                                      value={bridgeName}
                                      onChange={e => setBridgeName(e.target.value)}
                                    />
+                                   <p className="text-[10px] text-gray-500 mt-1">Defaults to <code>bridge-{vlanId || 'ID'}</code> if empty.</p>
                                 </div>
                              </div>
                         )}
@@ -659,6 +810,168 @@ const TemplateModal: React.FC<TemplateModalProps> = ({ isOpen, onClose, onAddAct
                     </div>
                  </div>
               )}
+
+              {activeTemplate === 'bonding' && (
+                  <div className="space-y-4 animate-in slide-in-from-right-4 duration-200">
+                    <h4 className="text-white font-bold text-lg mb-2">Bonding Interface</h4>
+                    <p className="text-xs text-gray-400 mb-4">
+                       Creates a bonded interface (e.g., LACP) aggregating multiple physical slaves using NetworkManager keyfiles.
+                    </p>
+
+                    <div>
+                        <label className="block text-xs uppercase text-emerald-400 font-bold mb-1">Bond Interface Name *</label>
+                        <input 
+                            className="w-full bg-gray-900 border border-gray-700 rounded px-3 py-2 text-sm text-gray-200 font-mono focus:border-emerald-500 focus:outline-none"
+                            placeholder="bond0"
+                            value={bondName}
+                            onChange={e => setBondName(e.target.value)}
+                        />
+                    </div>
+
+                    <div>
+                        <label className="block text-xs uppercase text-emerald-400 font-bold mb-1">Slave Interfaces (Comma Separated) *</label>
+                        <input 
+                            className="w-full bg-gray-900 border border-gray-700 rounded px-3 py-2 text-sm text-gray-200 font-mono focus:border-emerald-500 focus:outline-none"
+                            placeholder="eth0, eth1"
+                            value={bondSlaves}
+                            onChange={e => setBondSlaves(e.target.value)}
+                        />
+                        <p className="text-[10px] text-gray-500 mt-1">Physical interfaces to aggregate.</p>
+                    </div>
+
+                    <div>
+                        <label className="block text-xs uppercase text-gray-500 font-bold mb-1">Bond Mode</label>
+                        <select 
+                            className="w-full bg-gray-900 border border-gray-700 rounded px-3 py-2 text-sm text-gray-200 focus:border-emerald-500 focus:outline-none"
+                            value={bondMode}
+                            onChange={e => setBondMode(e.target.value)}
+                        >
+                            <option value="802.3ad">802.3ad (LACP)</option>
+                            <option value="active-backup">active-backup</option>
+                            <option value="balance-rr">balance-rr (Round Robin)</option>
+                            <option value="balance-xor">balance-xor</option>
+                            <option value="broadcast">broadcast</option>
+                            <option value="balance-tlb">balance-tlb</option>
+                            <option value="balance-alb">balance-alb</option>
+                        </select>
+                    </div>
+
+                    <div className="pt-2 border-t border-gray-700 mt-4">
+                         <label className="block text-xs uppercase text-gray-500 font-bold mb-2">Bond IP Configuration</label>
+                         <div className="flex gap-4 mb-3">
+                           <label className="flex items-center cursor-pointer">
+                              <input type="radio" name="bondMethod" value="manual" checked={bondMethod === 'manual'} onChange={() => setBondMethod('manual')} className="hidden" />
+                              <div className={`flex items-center px-3 py-2 rounded border transition-colors ${bondMethod === 'manual' ? 'bg-emerald-900/20 border-emerald-500 text-emerald-400' : 'bg-gray-900 border-gray-700 text-gray-400'}`}>
+                                 <span className="text-sm">Static / Manual</span>
+                              </div>
+                           </label>
+                           <label className="flex items-center cursor-pointer">
+                              <input type="radio" name="bondMethod" value="auto" checked={bondMethod === 'auto'} onChange={() => setBondMethod('auto')} className="hidden" />
+                              <div className={`flex items-center px-3 py-2 rounded border transition-colors ${bondMethod === 'auto' ? 'bg-emerald-900/20 border-emerald-500 text-emerald-400' : 'bg-gray-900 border-gray-700 text-gray-400'}`}>
+                                 <span className="text-sm">DHCP (Auto)</span>
+                              </div>
+                           </label>
+                        </div>
+                    </div>
+
+                    {bondMethod === 'manual' && (
+                        <div className="space-y-4 animate-in fade-in duration-200">
+                             <div>
+                                <label className="block text-xs uppercase text-gray-500 font-bold mb-1">IP Address (CIDR)</label>
+                                <input 
+                                    className="w-full bg-gray-900 border border-gray-700 rounded px-3 py-2 text-sm text-gray-200 font-mono focus:border-emerald-500 focus:outline-none"
+                                    placeholder="192.168.10.10/24 (Leave empty to disable IP)"
+                                    value={bondIp}
+                                    onChange={e => setBondIp(e.target.value)}
+                                />
+                                <p className="text-[10px] text-gray-500 mt-1">If left empty, IPv4 will be disabled (useful if only used for VLANs).</p>
+                            </div>
+
+                            <div className="grid grid-cols-2 gap-4">
+                                <div>
+                                <label className="block text-xs uppercase text-gray-500 font-bold mb-1">Gateway</label>
+                                <input 
+                                    className="w-full bg-gray-900 border border-gray-700 rounded px-3 py-2 text-sm text-gray-200 font-mono focus:border-emerald-500 focus:outline-none"
+                                    placeholder="192.168.10.1"
+                                    value={bondGw}
+                                    onChange={e => setBondGw(e.target.value)}
+                                />
+                                </div>
+                                <div>
+                                <label className="block text-xs uppercase text-gray-500 font-bold mb-1">DNS</label>
+                                <input 
+                                    className="w-full bg-gray-900 border border-gray-700 rounded px-3 py-2 text-sm text-gray-200 font-mono focus:border-emerald-500 focus:outline-none"
+                                    placeholder="8.8.8.8, 1.1.1.1"
+                                    value={bondDns}
+                                    onChange={e => setBondDns(e.target.value)}
+                                />
+                                </div>
+                            </div>
+                        </div>
+                    )}
+
+                    <div className="bg-gray-900/50 rounded border border-gray-700 p-3 mt-4">
+                        <label className="flex items-center space-x-2 cursor-pointer mb-2">
+                            <input 
+                                type="checkbox" 
+                                checked={bondVlanEnabled}
+                                onChange={e => setBondVlanEnabled(e.target.checked)}
+                                className="w-4 h-4 text-emerald-600 rounded focus:ring-emerald-500 bg-gray-700 border-gray-600"
+                            />
+                            <span className="text-sm font-medium text-gray-200">Create VLAN Interface on Bond?</span>
+                        </label>
+                        {bondVlanEnabled && (
+                             <div className="ml-6 space-y-4 animate-in fade-in duration-200">
+                                <p className="text-xs text-gray-500">
+                                   Adds a VLAN child interface (e.g., <code>{bondName}.100</code>) on top of the bond.
+                                </p>
+                                
+                                <div className="grid grid-cols-2 gap-4">
+                                    <div>
+                                        <label className="block text-xs uppercase text-emerald-400 font-bold mb-1">VLAN ID *</label>
+                                        <input 
+                                            className="w-full bg-gray-900 border border-gray-700 rounded px-3 py-2 text-sm text-gray-200 font-mono focus:border-emerald-500 focus:outline-none"
+                                            placeholder="100"
+                                            value={bondVlanId}
+                                            onChange={e => setBondVlanId(e.target.value)}
+                                        />
+                                    </div>
+                                    <div>
+                                        <label className="block text-xs uppercase text-emerald-400 font-bold mb-1">IP Address (CIDR) *</label>
+                                        <input 
+                                            className="w-full bg-gray-900 border border-gray-700 rounded px-3 py-2 text-sm text-gray-200 font-mono focus:border-emerald-500 focus:outline-none"
+                                            placeholder="10.0.20.5/24"
+                                            value={bondVlanIp}
+                                            onChange={e => setBondVlanIp(e.target.value)}
+                                        />
+                                    </div>
+                                </div>
+
+                                <div className="grid grid-cols-2 gap-4">
+                                    <div>
+                                        <label className="block text-xs uppercase text-gray-500 font-bold mb-1">VLAN Gateway</label>
+                                        <input 
+                                            className="w-full bg-gray-900 border border-gray-700 rounded px-3 py-2 text-sm text-gray-200 font-mono focus:border-emerald-500 focus:outline-none"
+                                            placeholder="10.0.20.1"
+                                            value={bondVlanGw}
+                                            onChange={e => setBondVlanGw(e.target.value)}
+                                        />
+                                    </div>
+                                    <div>
+                                        <label className="block text-xs uppercase text-gray-500 font-bold mb-1">VLAN DNS</label>
+                                        <input 
+                                            className="w-full bg-gray-900 border border-gray-700 rounded px-3 py-2 text-sm text-gray-200 font-mono focus:border-emerald-500 focus:outline-none"
+                                            placeholder="8.8.8.8"
+                                            value={bondVlanDns}
+                                            onChange={e => setBondVlanDns(e.target.value)}
+                                        />
+                                    </div>
+                                </div>
+                             </div>
+                        )}
+                    </div>
+                  </div>
+              )}
            </div>
         </div>
 
@@ -669,8 +982,8 @@ const TemplateModal: React.FC<TemplateModalProps> = ({ isOpen, onClose, onAddAct
            </button>
            <button 
              onClick={handleApply}
-             disabled={!activeTemplate || (activeTemplate === 'ndm' && !hasNdmConfig)}
-             className="px-6 py-2 bg-emerald-600 hover:bg-emerald-500 disabled:bg-gray-700 disabled:text-gray-500 text-white font-medium rounded-lg transition-colors flex items-center shadow-lg"
+             disabled={!isFormValid()}
+             className="px-6 py-2 bg-emerald-600 hover:bg-emerald-500 disabled:bg-gray-700 disabled:text-gray-500 disabled:cursor-not-allowed text-white font-medium rounded-lg transition-colors flex items-center shadow-lg"
            >
               <Check size={16} className="mr-2" />
               Generate Actions
