@@ -45,8 +45,9 @@ const generateSingleConfigYaml = (config: CloudInitConfig): string => {
           const act = action as WriteFileAction;
           innerYaml += `      files:\n`;
           innerYaml += `        - path: ${act.path}\n`;
-          innerYaml += `          permissions: "${act.permissions}"\n`;
-          innerYaml += `          owner: "${act.owner}"\n`;
+          // Remove quotes for permissions and owner to allow numeric values
+          innerYaml += `          permissions: ${act.permissions}\n`;
+          innerYaml += `          owner: ${act.owner}\n`;
           
           if (act.encoding === 'base64') {
              innerYaml += `          encoding: b64\n`;

@@ -48,7 +48,6 @@ const parseConfigObject = (configRoot: any, index: number, total: number): { con
                 stagesRoot = {}; 
             }
         }
-        total=total;
     }
 
     // Extract Selectors

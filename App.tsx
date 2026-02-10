@@ -2,7 +2,6 @@ import React, { useState, useMemo } from 'react';
 import { AppState, CloudAction, NodeSelector, CloudInitConfig } from './types';
 import ActionForm from './components/ActionForm';
 import ActionItem from './components/ActionItem';
-import Summary from './components/Summary';
 import Importer from './components/Importer';
 import HowTo from './components/HowTo';
 import About from './components/About';
@@ -13,7 +12,6 @@ import {
   FileUp,
   Plus,
   Download,
-  Sparkles,
   Edit3,
   HelpCircle,
   Info,
@@ -28,7 +26,6 @@ enum Tab {
   EDITOR = 'editor',
   IMPORT = 'import',
   PREVIEW = 'preview',
-  SUMMARY = 'summary',
   HOWTO = 'howto',
   ABOUT = 'about'
 }
@@ -44,9 +41,6 @@ const HarvesterLogo = () => (
 
 const App: React.FC = () => {
   const [activeTab, setActiveTab] = useState<Tab>(Tab.EDITOR);
-  
-  // Lifted state for AI Summary to persist across tab switches
-  const [aiSummary, setAiSummary] = useState<string | null>(null);
   
   // Initial State with one default config
   const initialConfigId = Math.random().toString(36).substr(2, 9);
@@ -200,13 +194,6 @@ const App: React.FC = () => {
           >
             <Code size={14} className="mr-2" />
             YAML Preview
-          </button>
-           <button 
-            onClick={() => setActiveTab(Tab.SUMMARY)}
-            className={`px-4 py-2 rounded-md text-sm font-medium transition-all flex items-center ${activeTab === Tab.SUMMARY ? 'bg-[#30BA78] text-white shadow' : 'text-gray-400 hover:text-gray-200'}`}
-          >
-             <Sparkles size={14} className="mr-2" />
-            AI Summary
           </button>
           <button 
             onClick={() => setActiveTab(Tab.HOWTO)}
@@ -412,16 +399,6 @@ const App: React.FC = () => {
 
             {activeTab === Tab.ABOUT && (
               <About />
-            )}
-
-            {activeTab === Tab.SUMMARY && (
-              <div className="max-w-4xl mx-auto">
-                <Summary 
-                    yaml={generatedYaml} 
-                    currentSummary={aiSummary}
-                    onSummaryUpdate={setAiSummary}
-                />
-              </div>
             )}
 
             {activeTab === Tab.IMPORT && (
