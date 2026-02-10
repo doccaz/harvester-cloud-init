@@ -122,8 +122,8 @@ const TemplateModal: React.FC<TemplateModalProps> = ({ isOpen, onClose, onAddAct
             type: ActionType.WRITE_FILE,
             path: '/etc/ssh/sshd_config.d/sftp.conf',
             content: 'Subsystem sftp internal-sftp',
-            permissions: '0644',
-            owner: 'root:root',
+            permissions: '0640',
+            owner: '0',
             encoding: 'text'
         } as WriteFileAction);
     }
@@ -163,8 +163,8 @@ const TemplateModal: React.FC<TemplateModalProps> = ({ isOpen, onClose, onAddAct
             type: ActionType.WRITE_FILE,
             path: '/etc/multipath.conf',
             content: content.trim(),
-            permissions: '0644',
-            owner: 'root:root',
+            permissions: '0640',
+            owner: '0',
             encoding: 'text'
         } as WriteFileAction);
 
@@ -208,8 +208,8 @@ const TemplateModal: React.FC<TemplateModalProps> = ({ isOpen, onClose, onAddAct
                  type: ActionType.WRITE_FILE,
                  path: `/etc/NetworkManager/system-connections/${bridgeConnId}.nmconnection`,
                  content: bridgeContent,
-                 permissions: '0600',
-                 owner: 'root:root',
+                 permissions: '0640',
+                 owner: '0',
                  encoding: 'text'
              } as WriteFileAction);
           } else {
@@ -240,8 +240,8 @@ const TemplateModal: React.FC<TemplateModalProps> = ({ isOpen, onClose, onAddAct
                type: ActionType.WRITE_FILE,
                path: `/etc/NetworkManager/system-connections/${finalVlanName}.nmconnection`,
                content,
-               permissions: '0600',
-               owner: 'root:root',
+               permissions: '0640',
+               owner: '0',
                encoding: 'text'
            } as WriteFileAction);
        } else {
@@ -258,6 +258,14 @@ const TemplateModal: React.FC<TemplateModalProps> = ({ isOpen, onClose, onAddAct
                command: cmd
            } as RunCmdAction);
        }
+
+       // Add reload to apply changes
+       actions.push({
+           id: generateId(),
+           phase: Phase.BOOT,
+           type: ActionType.RUN_CMD,
+           command: 'nmcli connection reload'
+       } as RunCmdAction);
     }
     else if (activeTemplate === 'bonding') {
         const slaves = bondSlaves.split(/[ ,;]+/).filter(Boolean);
@@ -288,8 +296,8 @@ const TemplateModal: React.FC<TemplateModalProps> = ({ isOpen, onClose, onAddAct
             type: ActionType.WRITE_FILE,
             path: `/etc/NetworkManager/system-connections/${connectionId}.nmconnection`,
             content: bondContent,
-            permissions: '0600',
-            owner: 'root:root',
+            permissions: '0640',
+            owner: '0',
             encoding: 'text'
         } as WriteFileAction);
 
@@ -304,8 +312,8 @@ const TemplateModal: React.FC<TemplateModalProps> = ({ isOpen, onClose, onAddAct
                 type: ActionType.WRITE_FILE,
                 path: `/etc/NetworkManager/system-connections/${connectionId}-slave-${slave}.nmconnection`,
                 content: slaveContent,
-                permissions: '0600',
-                owner: 'root:root',
+                permissions: '0640',
+                owner: '0',
                 encoding: 'text'
             } as WriteFileAction);
         });
@@ -331,11 +339,19 @@ const TemplateModal: React.FC<TemplateModalProps> = ({ isOpen, onClose, onAddAct
                 type: ActionType.WRITE_FILE,
                 path: `/etc/NetworkManager/system-connections/${vlanConnName}.nmconnection`,
                 content: vlanContent,
-                permissions: '0600',
-                owner: 'root:root',
+                permissions: '0640',
+                owner: '0',
                 encoding: 'text'
             } as WriteFileAction);
         }
+
+        // Add reload to apply changes
+        actions.push({
+            id: generateId(),
+            phase: Phase.BOOT,
+            type: ActionType.RUN_CMD,
+            command: 'nmcli connection reload'
+        } as RunCmdAction);
     }
 
     onAddActions(actions);

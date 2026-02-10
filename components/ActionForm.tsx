@@ -30,8 +30,8 @@ const ActionForm: React.FC<ActionFormProps> = ({ onAdd, onOpenTemplates }) => {
           ...base, 
           path: commonState.path || '/tmp/file.txt', 
           content: commonState.content || '', 
-          permissions: commonState.permissions || '0644',
-          owner: commonState.owner || 'root',
+          permissions: commonState.permissions || '0640',
+          owner: commonState.owner || '0',
           encoding: 'text',
         } as WriteFileAction;
         break;
@@ -174,11 +174,11 @@ const ActionForm: React.FC<ActionFormProps> = ({ onAdd, onOpenTemplates }) => {
              <div className="flex gap-2">
                 <div className="flex-1">
                     <label className="block text-xs text-gray-400 mb-1">Permissions</label>
-                    <input type="text" placeholder="0644" className="w-full bg-gray-900 border border-gray-700 rounded px-3 py-2 text-sm text-gray-200 font-mono" value={commonState.permissions || ''} onChange={(e) => updateField('permissions', e.target.value)} />
+                    <input type="text" placeholder="0640" className="w-full bg-gray-900 border border-gray-700 rounded px-3 py-2 text-sm text-gray-200 font-mono" value={commonState.permissions || ''} onChange={(e) => updateField('permissions', e.target.value)} />
                 </div>
                 <div className="flex-1">
                     <label className="block text-xs text-gray-400 mb-1">Owner</label>
-                    <input type="text" placeholder="root:root" className="w-full bg-gray-900 border border-gray-700 rounded px-3 py-2 text-sm text-gray-200 font-mono" value={commonState.owner || ''} onChange={(e) => updateField('owner', e.target.value)} />
+                    <input type="text" placeholder="0" className="w-full bg-gray-900 border border-gray-700 rounded px-3 py-2 text-sm text-gray-200 font-mono" value={commonState.owner || ''} onChange={(e) => updateField('owner', e.target.value)} />
                 </div>
              </div>
             <div>

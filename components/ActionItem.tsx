@@ -42,7 +42,7 @@ const ActionItem: React.FC<ActionItemProps> = ({ action, index, total, onMove, o
 
     switch (newType) {
         case ActionType.WRITE_FILE:
-            newAction = { ...base, path: '/tmp/file.txt', content: '', permissions: '0644', owner: 'root', encoding: 'text' } as WriteFileAction;
+            newAction = { ...base, path: '/tmp/file.txt', content: '', permissions: '0640', owner: '0', encoding: 'text' } as WriteFileAction;
             break;
         case ActionType.RUN_CMD:
             newAction = { ...base, command: 'echo "hello"' } as RunCmdAction;
