@@ -5,6 +5,7 @@ import ActionItem from './components/ActionItem';
 import Importer from './components/Importer';
 import HowTo from './components/HowTo';
 import About from './components/About';
+import TemplateModal from './components/TemplateModal';
 import { generateYaml } from './utils/yaml';
 import { 
   Trash2, 
@@ -30,17 +31,9 @@ enum Tab {
   ABOUT = 'about'
 }
 
-const HarvesterLogo = () => (
-  <svg width="32" height="32" viewBox="0 0 32 32" fill="none" xmlns="http://www.w3.org/2000/svg" className="mr-0">
-    <path d="M16 2L2 9L16 16L30 9L16 2Z" fill="#30BA78"/>
-    <path d="M2 23L16 30L30 23V9L16 16L2 9V23Z" fill="#248F5B"/>
-    <path d="M16 16L30 9V23L16 30V16Z" fill="#1A6D46"/>
-    <path d="M16 16L2 9V23L16 30V16Z" fill="#30BA78" fillOpacity="0.8"/>
-  </svg>
-);
-
 const App: React.FC = () => {
   const [activeTab, setActiveTab] = useState<Tab>(Tab.EDITOR);
+  const [isTemplateModalOpen, setIsTemplateModalOpen] = useState(false);
   
   // Initial State with one default config
   const initialConfigId = Math.random().toString(36).substr(2, 9);
@@ -94,6 +87,10 @@ const App: React.FC = () => {
   // --- Action Management ---
   const addAction = (action: CloudAction) => {
       updateActiveConfig({ actions: [...activeConfig.actions, action] });
+  };
+
+  const addActions = (actions: CloudAction[]) => {
+      updateActiveConfig({ actions: [...activeConfig.actions, ...actions] });
   };
 
   const updateAction = (id: string, updatedAction: CloudAction) => {
@@ -166,11 +163,9 @@ const App: React.FC = () => {
       
       {/* Header */}
       <header className="flex items-center px-6 py-4 bg-[#092621] border-b border-[#1A453C] shadow-md z-10">
-        <div className="p-1 mr-4">
-          <HarvesterLogo />
-        </div>
+        <img src="https://harvesterhci.io/img/logo_horizontal.svg" alt="Harvester" className="h-8 mr-4" />
         <div>
-          <h1 className="text-xl font-bold tracking-tight text-white">SUSE Harvester/Elemental CloudInit CRD Architect</h1>
+          <h1 className="text-xl font-bold tracking-tight text-white">CloudInit CRD Architect</h1>
           <p className="text-xs text-[#30BA78] font-medium tracking-wide">Visual Configuration Editor</p>
         </div>
         <div className="ml-auto flex bg-[#0C322C] rounded-lg p-1 border border-[#1A453C] mr-8">
@@ -328,7 +323,7 @@ const App: React.FC = () => {
                       <Box size={16} className="mr-2" />
                       New Action
                     </h3>
-                    <ActionForm onAdd={addAction} />
+                    <ActionForm onAdd={addAction} onOpenTemplates={() => setIsTemplateModalOpen(true)} />
                   </div>
                 </div>
 
@@ -411,9 +406,16 @@ const App: React.FC = () => {
         </div>
       </main>
 
+      {/* Templates Modal */}
+      <TemplateModal 
+        isOpen={isTemplateModalOpen} 
+        onClose={() => setIsTemplateModalOpen(false)} 
+        onAddActions={addActions}
+      />
+
       {/* Version Footer */}
       <div className="fixed bottom-3 left-6 text-[10px] text-gray-600 font-mono z-50">
-        v1.0.2
+        v1.4.0
       </div>
 
       {/* Diagonal GitHub Ribbon (Bottom Right) */}

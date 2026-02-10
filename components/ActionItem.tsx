@@ -368,7 +368,7 @@ const ActionItem: React.FC<ActionItemProps> = ({ action, index, total, onMove, o
     <div className={`bg-gray-800 rounded-lg border transition-all overflow-hidden ${expanded ? 'border-gray-600 shadow-lg' : 'border-gray-700 shadow-sm'}`}>
       <div className="flex items-center gap-2 p-3">
         {/* Reorder Controls */}
-        <div className="flex flex-col space-y-0.5 text-gray-500">
+        <div className="flex flex-col space-y-0.5 text-gray-500 flex-shrink-0">
             <button 
                 onClick={(e) => { e.stopPropagation(); onMove(index, 'up'); }}
                 disabled={index === 0}
@@ -387,23 +387,23 @@ const ActionItem: React.FC<ActionItemProps> = ({ action, index, total, onMove, o
 
         {/* Main Click Area */}
         <div 
-            className="flex-1 flex items-center gap-3 cursor-pointer select-none"
+            className="flex-1 flex items-center gap-3 cursor-pointer select-none min-w-0"
             onClick={() => !isEditing && setExpanded(!expanded)}
         >
-            <div className="p-2 rounded bg-gray-900 border border-gray-700">
+            <div className="p-2 rounded bg-gray-900 border border-gray-700 flex-shrink-0">
                 {getIcon()}
             </div>
 
             <div className="flex-1 min-w-0">
                 <div className="flex items-center gap-2 mb-1">
-                    <span className={`text-[10px] font-bold uppercase px-1.5 py-0.5 rounded border ${getPhaseColor(action.phase)}`}>
+                    <span className={`text-[10px] font-bold uppercase px-1.5 py-0.5 rounded border flex-shrink-0 ${getPhaseColor(action.phase)}`}>
                         {action.phase}
                     </span>
-                    <span className="text-[10px] font-mono text-gray-500 uppercase bg-gray-900 border border-gray-700 px-1 rounded">
+                    <span className="text-[10px] font-mono text-gray-500 uppercase bg-gray-900 border border-gray-700 px-1 rounded flex-shrink-0">
                         {action.type.replace('_', ' ')}
                     </span>
                     {isEditing && (
-                       <span className="text-[10px] font-bold uppercase px-1.5 py-0.5 rounded border border-yellow-800 bg-yellow-900/30 text-yellow-500 ml-auto">
+                       <span className="text-[10px] font-bold uppercase px-1.5 py-0.5 rounded border border-yellow-800 bg-yellow-900/30 text-yellow-500 ml-auto flex-shrink-0">
                           Editing
                        </span>
                     )}
@@ -414,7 +414,7 @@ const ActionItem: React.FC<ActionItemProps> = ({ action, index, total, onMove, o
             </div>
 
             {!isEditing && (
-               <div className="flex items-center gap-2">
+               <div className="flex items-center gap-2 flex-shrink-0 ml-auto">
                  <button 
                     onClick={startEditing}
                     className="p-1.5 text-gray-500 hover:text-emerald-400 hover:bg-gray-900 rounded transition-colors"
@@ -433,7 +433,7 @@ const ActionItem: React.FC<ActionItemProps> = ({ action, index, total, onMove, o
         {!isEditing && (
             <button 
                 onClick={(e) => { e.stopPropagation(); onRemove(action.id); }}
-                className="p-2 text-gray-600 hover:text-red-400 hover:bg-gray-900 rounded transition-colors"
+                className="p-2 text-gray-600 hover:text-red-400 hover:bg-gray-900 rounded transition-colors flex-shrink-0"
                 title="Remove Action"
             >
                 <Trash2 size={16} />
