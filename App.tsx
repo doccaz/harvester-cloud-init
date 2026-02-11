@@ -437,7 +437,7 @@ const App: React.FC = () => {
 
       {/* Version Footer */}
       <div className="fixed bottom-3 left-6 text-[10px] text-gray-600 font-mono z-50">
-        v1.5.2
+        v1.5.3
       </div>
 
       {/* Diagonal GitHub Ribbon (Bottom Right) */}

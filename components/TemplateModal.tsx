@@ -31,6 +31,7 @@ const TemplateModal: React.FC<TemplateModalProps> = ({ isOpen, onClose, onAddAct
   const [createParentBridge, setCreateParentBridge] = useState(false);
   const [bridgeName, setBridgeName] = useState(''); 
   const [vlanMethod, setVlanMethod] = useState<'nmcli' | 'file'>('file');
+  const [vlanIpv4Required, setVlanIpv4Required] = useState(false);
 
   // Bonding State
   const [bondName, setBondName] = useState('bond0');
@@ -41,6 +42,7 @@ const TemplateModal: React.FC<TemplateModalProps> = ({ isOpen, onClose, onAddAct
   const [bondDns, setBondDns] = useState('');
   const [bondMtu, setBondMtu] = useState('');
   const [bondMethod, setBondMethod] = useState<'auto' | 'manual'>('manual');
+  const [bondIpv4Required, setBondIpv4Required] = useState(false);
 
   // Bonding VLAN State
   const [bondVlanEnabled, setBondVlanEnabled] = useState(false);
@@ -48,6 +50,7 @@ const TemplateModal: React.FC<TemplateModalProps> = ({ isOpen, onClose, onAddAct
   const [bondVlanIp, setBondVlanIp] = useState('');
   const [bondVlanGw, setBondVlanGw] = useState('');
   const [bondVlanDns, setBondVlanDns] = useState('');
+  const [bondVlanIpv4Required, setBondVlanIpv4Required] = useState(false);
 
   // External Disk (NDM) State
   const [ndmBlacklistVP, setNdmBlacklistVP] = useState<VP[]>([]);
@@ -236,6 +239,7 @@ const TemplateModal: React.FC<TemplateModalProps> = ({ isOpen, onClose, onAddAct
                const formattedDns = vlanDns.split(/[ ,;]+/).filter(Boolean).join(';') + ';';
                content += `\ndns=${formattedDns}`;
            }
+           if (vlanIpv4Required) content += `\nmay-fail=false`;
            content += `\n\n[ipv6]\nmethod=disabled\n`;
            
            actions.push({
@@ -256,6 +260,7 @@ const TemplateModal: React.FC<TemplateModalProps> = ({ isOpen, onClose, onAddAct
                cmd += ` ipv4.dns "${formattedDns}"`;
            }
            if (vlanMtu) cmd += ` mtu ${vlanMtu}`;
+           if (vlanIpv4Required) cmd += ` ipv4.may-fail no`;
 
            actions.push({
                id: generateId(),
@@ -293,6 +298,7 @@ const TemplateModal: React.FC<TemplateModalProps> = ({ isOpen, onClose, onAddAct
                 const formattedDns = bondDns.split(/[ ,;]+/).filter(Boolean).join(';') + ';';
                 bondContent += `dns=${formattedDns}\n`;
             }
+            if (bondIpv4Required) bondContent += `may-fail=false\n`;
         } else if (bondMethod === 'manual' && !bondIp) {
             bondContent = bondContent.replace('method=manual', 'method=disabled');
         }
@@ -341,6 +347,7 @@ const TemplateModal: React.FC<TemplateModalProps> = ({ isOpen, onClose, onAddAct
                 const formattedDns = bondVlanDns.split(/[ ,;]+/).filter(Boolean).join(';') + ';';
                 vlanContent += `dns=${formattedDns}\n`;
             }
+            if (bondVlanIpv4Required) vlanContent += `may-fail=false\n`;
             vlanContent += `\n[ipv6]\nmethod=disabled\n`;
 
             actions.push({
@@ -382,6 +389,8 @@ const TemplateModal: React.FC<TemplateModalProps> = ({ isOpen, onClose, onAddAct
     setVlanMtu('');
     setCreateParentBridge(false);
     setBridgeName('');
+    setVlanMethod('file');
+    setVlanIpv4Required(false);
     
     // Reset Bonding
     setBondName('bond0');
@@ -392,11 +401,13 @@ const TemplateModal: React.FC<TemplateModalProps> = ({ isOpen, onClose, onAddAct
     setBondDns('');
     setBondMtu('');
     setBondMethod('manual');
+    setBondIpv4Required(false);
     setBondVlanEnabled(false);
     setBondVlanId('');
     setBondVlanIp('');
     setBondVlanGw('');
     setBondVlanDns('');
+    setBondVlanIpv4Required(false);
 
     // Reset NDM
     setNdmBlacklistVP([]);
@@ -798,6 +809,21 @@ const TemplateModal: React.FC<TemplateModalProps> = ({ isOpen, onClose, onAddAct
                     </div>
 
                     <div className="bg-gray-900/50 rounded border border-gray-700 p-3 mt-2">
+                         <label className="flex items-center space-x-2 cursor-pointer">
+                            <input 
+                                type="checkbox" 
+                                checked={vlanIpv4Required}
+                                onChange={e => setVlanIpv4Required(e.target.checked)}
+                                className="w-4 h-4 text-emerald-600 rounded focus:ring-emerald-500 bg-gray-700 border-gray-600"
+                            />
+                            <span className="text-sm font-medium text-gray-200">Require IPv4 for this connection</span>
+                        </label>
+                        <p className="text-[10px] text-gray-500 mt-1 ml-6">
+                            If enabled (<code>may-fail=false</code>), the network startup will treat this connection as critical and may wait or fail if IPv4 assignment fails. Default behavior allows the connection to proceed even if IP assignment is pending/failed.
+                        </p>
+                    </div>
+
+                    <div className="bg-gray-900/50 rounded border border-gray-700 p-3 mt-2">
                         <label className="flex items-center space-x-2 cursor-pointer mb-2">
                             <input 
                                 type="checkbox" 
@@ -955,6 +981,21 @@ const TemplateModal: React.FC<TemplateModalProps> = ({ isOpen, onClose, onAddAct
                                 />
                                 </div>
                             </div>
+                            
+                            <div className="bg-gray-900/50 rounded border border-gray-700 p-3 mt-2">
+                                <label className="flex items-center space-x-2 cursor-pointer">
+                                    <input 
+                                        type="checkbox" 
+                                        checked={bondIpv4Required}
+                                        onChange={e => setBondIpv4Required(e.target.checked)}
+                                        className="w-4 h-4 text-emerald-600 rounded focus:ring-emerald-500 bg-gray-700 border-gray-600"
+                                    />
+                                    <span className="text-sm font-medium text-gray-200">Require IPv4 for this connection</span>
+                                </label>
+                                <p className="text-[10px] text-gray-500 mt-1 ml-6">
+                                    If enabled (<code>may-fail=false</code>), the network startup will treat this connection as critical and may wait or fail if IPv4 assignment fails. Default behavior allows the connection to proceed even if IP assignment is pending/failed.
+                                </p>
+                            </div>
                         </div>
                     )}
 
@@ -1014,6 +1055,21 @@ const TemplateModal: React.FC<TemplateModalProps> = ({ isOpen, onClose, onAddAct
                                             onChange={e => setBondVlanDns(e.target.value)}
                                         />
                                     </div>
+                                </div>
+                                
+                                <div className="bg-gray-900/50 rounded border border-gray-700 p-3 mt-2">
+                                     <label className="flex items-center space-x-2 cursor-pointer">
+                                        <input 
+                                            type="checkbox" 
+                                            checked={bondVlanIpv4Required}
+                                            onChange={e => setBondVlanIpv4Required(e.target.checked)}
+                                            className="w-4 h-4 text-emerald-600 rounded focus:ring-emerald-500 bg-gray-700 border-gray-600"
+                                        />
+                                        <span className="text-sm font-medium text-gray-200">Require IPv4 for this connection</span>
+                                    </label>
+                                    <p className="text-[10px] text-gray-500 mt-1 ml-6">
+                                        If enabled (<code>may-fail=false</code>), the network startup will treat this connection as critical and may wait or fail if IPv4 assignment fails. Default behavior allows the connection to proceed even if IP assignment is pending/failed.
+                                    </p>
                                 </div>
                              </div>
                         )}
