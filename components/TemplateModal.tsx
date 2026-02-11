@@ -27,6 +27,7 @@ const TemplateModal: React.FC<TemplateModalProps> = ({ isOpen, onClose, onAddAct
   const [vlanIp, setVlanIp] = useState('');
   const [vlanGw, setVlanGw] = useState('');
   const [vlanDns, setVlanDns] = useState('');
+  const [vlanMtu, setVlanMtu] = useState('');
   const [createParentBridge, setCreateParentBridge] = useState(false);
   const [bridgeName, setBridgeName] = useState(''); 
   const [vlanMethod, setVlanMethod] = useState<'nmcli' | 'file'>('file');
@@ -38,6 +39,7 @@ const TemplateModal: React.FC<TemplateModalProps> = ({ isOpen, onClose, onAddAct
   const [bondIp, setBondIp] = useState('');
   const [bondGw, setBondGw] = useState('');
   const [bondDns, setBondDns] = useState('');
+  const [bondMtu, setBondMtu] = useState('');
   const [bondMethod, setBondMethod] = useState<'auto' | 'manual'>('manual');
 
   // Bonding VLAN State
@@ -122,7 +124,7 @@ const TemplateModal: React.FC<TemplateModalProps> = ({ isOpen, onClose, onAddAct
             type: ActionType.WRITE_FILE,
             path: '/etc/ssh/sshd_config.d/sftp.conf',
             content: 'Subsystem sftp internal-sftp',
-            permissions: '0640',
+            permissions: '0600',
             owner: '0',
             encoding: 'text'
         } as WriteFileAction);
@@ -163,7 +165,7 @@ const TemplateModal: React.FC<TemplateModalProps> = ({ isOpen, onClose, onAddAct
             type: ActionType.WRITE_FILE,
             path: '/etc/multipath.conf',
             content: content.trim(),
-            permissions: '0640',
+            permissions: '0600',
             owner: '0',
             encoding: 'text'
         } as WriteFileAction);
@@ -208,7 +210,7 @@ const TemplateModal: React.FC<TemplateModalProps> = ({ isOpen, onClose, onAddAct
                  type: ActionType.WRITE_FILE,
                  path: `/etc/NetworkManager/system-connections/${bridgeConnId}.nmconnection`,
                  content: bridgeContent,
-                 permissions: '0640',
+                 permissions: '0600',
                  owner: '0',
                  encoding: 'text'
              } as WriteFileAction);
@@ -224,7 +226,9 @@ const TemplateModal: React.FC<TemplateModalProps> = ({ isOpen, onClose, onAddAct
 
        if (vlanMethod === 'file') {
            let content = `[connection]\nid=${finalVlanName}\nuuid=${generateUUID()}\ntype=vlan\n\n`;
-           content += `[ethernet]\n\n`;
+           content += `[ethernet]\n`;
+           if (vlanMtu) content += `mtu=${vlanMtu}\n`;
+           content += `\n`;
            content += `[vlan]\nflags=1\nid=${vlanId}\nparent=${finalParent}\n\n`;
            content += `[ipv4]\nmethod=manual\naddress1=${vlanIp}`;
            if (vlanGw) content += `,${vlanGw}`;
@@ -240,7 +244,7 @@ const TemplateModal: React.FC<TemplateModalProps> = ({ isOpen, onClose, onAddAct
                type: ActionType.WRITE_FILE,
                path: `/etc/NetworkManager/system-connections/${finalVlanName}.nmconnection`,
                content,
-               permissions: '0640',
+               permissions: '0600',
                owner: '0',
                encoding: 'text'
            } as WriteFileAction);
@@ -251,6 +255,8 @@ const TemplateModal: React.FC<TemplateModalProps> = ({ isOpen, onClose, onAddAct
                const formattedDns = vlanDns.split(/[ ,;]+/).filter(Boolean).join(' ');
                cmd += ` ipv4.dns "${formattedDns}"`;
            }
+           if (vlanMtu) cmd += ` mtu ${vlanMtu}`;
+
            actions.push({
                id: generateId(),
                phase: Phase.BOOT,
@@ -274,7 +280,10 @@ const TemplateModal: React.FC<TemplateModalProps> = ({ isOpen, onClose, onAddAct
         // 1. Generate Master Bond Config
         let bondContent = `[connection]\nid=${connectionId}\nuuid=${generateUUID()}\ntype=bond\ninterface-name=${bondName}\n\n`;
         bondContent += `[bond]\nmode=${bondMode}\nmiimon=100\n\n`;
-        
+        bondContent += `[ethernet]\n`;
+        if (bondMtu) bondContent += `mtu=${bondMtu}\n`;
+        bondContent += `\n`;
+
         bondContent += `[ipv4]\nmethod=${bondMethod}\n`;
         if (bondMethod === 'manual' && bondIp) {
             bondContent += `address1=${bondIp}`;
@@ -296,7 +305,7 @@ const TemplateModal: React.FC<TemplateModalProps> = ({ isOpen, onClose, onAddAct
             type: ActionType.WRITE_FILE,
             path: `/etc/NetworkManager/system-connections/${connectionId}.nmconnection`,
             content: bondContent,
-            permissions: '0640',
+            permissions: '0600',
             owner: '0',
             encoding: 'text'
         } as WriteFileAction);
@@ -305,6 +314,7 @@ const TemplateModal: React.FC<TemplateModalProps> = ({ isOpen, onClose, onAddAct
         slaves.forEach(slave => {
             let slaveContent = `[connection]\nid=${connectionId}-slave-${slave}\nuuid=${generateUUID()}\ntype=ethernet\ninterface-name=${slave}\nmaster=${bondName}\nslave-type=bond\n\n`;
             slaveContent += `[ethernet]\n`;
+            if (bondMtu) slaveContent += `mtu=${bondMtu}\n`;
 
             actions.push({
                 id: generateId(),
@@ -312,7 +322,7 @@ const TemplateModal: React.FC<TemplateModalProps> = ({ isOpen, onClose, onAddAct
                 type: ActionType.WRITE_FILE,
                 path: `/etc/NetworkManager/system-connections/${connectionId}-slave-${slave}.nmconnection`,
                 content: slaveContent,
-                permissions: '0640',
+                permissions: '0600',
                 owner: '0',
                 encoding: 'text'
             } as WriteFileAction);
@@ -339,7 +349,7 @@ const TemplateModal: React.FC<TemplateModalProps> = ({ isOpen, onClose, onAddAct
                 type: ActionType.WRITE_FILE,
                 path: `/etc/NetworkManager/system-connections/${vlanConnName}.nmconnection`,
                 content: vlanContent,
-                permissions: '0640',
+                permissions: '0600',
                 owner: '0',
                 encoding: 'text'
             } as WriteFileAction);
@@ -369,6 +379,7 @@ const TemplateModal: React.FC<TemplateModalProps> = ({ isOpen, onClose, onAddAct
     setVlanIp('');
     setVlanGw('');
     setVlanDns('');
+    setVlanMtu('');
     setCreateParentBridge(false);
     setBridgeName('');
     
@@ -379,6 +390,7 @@ const TemplateModal: React.FC<TemplateModalProps> = ({ isOpen, onClose, onAddAct
     setBondIp('');
     setBondGw('');
     setBondDns('');
+    setBondMtu('');
     setBondMethod('manual');
     setBondVlanEnabled(false);
     setBondVlanId('');
@@ -713,23 +725,32 @@ const TemplateModal: React.FC<TemplateModalProps> = ({ isOpen, onClose, onAddAct
                        Configures a VLAN interface with a static IP address.
                     </p>
                     
-                    <div className="grid grid-cols-2 gap-4">
-                        <div>
+                    <div className="grid grid-cols-3 gap-4">
+                        <div className="col-span-1">
                            <label className="block text-xs uppercase text-gray-500 font-bold mb-1">Parent Interface</label>
                            <input 
                              className="w-full bg-gray-900 border border-gray-700 rounded px-3 py-2 text-sm text-gray-200 font-mono focus:border-emerald-500 focus:outline-none"
-                             placeholder="eth0 or mgmt-br"
+                             placeholder="eth0"
                              value={vlanParent}
                              onChange={e => setVlanParent(e.target.value)}
                            />
                         </div>
-                        <div>
+                        <div className="col-span-1">
                            <label className="block text-xs uppercase text-emerald-400 font-bold mb-1">VLAN ID *</label>
                            <input 
                              className="w-full bg-gray-900 border border-gray-700 rounded px-3 py-2 text-sm text-gray-200 font-mono focus:border-emerald-500 focus:outline-none"
                              placeholder="100"
                              value={vlanId}
                              onChange={e => setVlanId(e.target.value)}
+                           />
+                        </div>
+                        <div className="col-span-1">
+                           <label className="block text-xs uppercase text-gray-500 font-bold mb-1">MTU</label>
+                           <input 
+                             className="w-full bg-gray-900 border border-gray-700 rounded px-3 py-2 text-sm text-gray-200 font-mono focus:border-emerald-500 focus:outline-none"
+                             placeholder="1500"
+                             value={vlanMtu}
+                             onChange={e => setVlanMtu(e.target.value)}
                            />
                         </div>
                     </div>
@@ -855,21 +876,32 @@ const TemplateModal: React.FC<TemplateModalProps> = ({ isOpen, onClose, onAddAct
                         <p className="text-[10px] text-gray-500 mt-1">Physical interfaces to aggregate.</p>
                     </div>
 
-                    <div>
-                        <label className="block text-xs uppercase text-gray-500 font-bold mb-1">Bond Mode</label>
-                        <select 
-                            className="w-full bg-gray-900 border border-gray-700 rounded px-3 py-2 text-sm text-gray-200 focus:border-emerald-500 focus:outline-none"
-                            value={bondMode}
-                            onChange={e => setBondMode(e.target.value)}
-                        >
-                            <option value="802.3ad">802.3ad (LACP)</option>
-                            <option value="active-backup">active-backup</option>
-                            <option value="balance-rr">balance-rr (Round Robin)</option>
-                            <option value="balance-xor">balance-xor</option>
-                            <option value="broadcast">broadcast</option>
-                            <option value="balance-tlb">balance-tlb</option>
-                            <option value="balance-alb">balance-alb</option>
-                        </select>
+                    <div className="grid grid-cols-2 gap-4">
+                        <div>
+                            <label className="block text-xs uppercase text-gray-500 font-bold mb-1">Bond Mode</label>
+                            <select 
+                                className="w-full bg-gray-900 border border-gray-700 rounded px-3 py-2 text-sm text-gray-200 focus:border-emerald-500 focus:outline-none"
+                                value={bondMode}
+                                onChange={e => setBondMode(e.target.value)}
+                            >
+                                <option value="802.3ad">802.3ad (LACP)</option>
+                                <option value="active-backup">active-backup</option>
+                                <option value="balance-rr">balance-rr (Round Robin)</option>
+                                <option value="balance-xor">balance-xor</option>
+                                <option value="broadcast">broadcast</option>
+                                <option value="balance-tlb">balance-tlb</option>
+                                <option value="balance-alb">balance-alb</option>
+                            </select>
+                        </div>
+                        <div>
+                           <label className="block text-xs uppercase text-gray-500 font-bold mb-1">MTU</label>
+                           <input 
+                             className="w-full bg-gray-900 border border-gray-700 rounded px-3 py-2 text-sm text-gray-200 font-mono focus:border-emerald-500 focus:outline-none"
+                             placeholder="1500"
+                             value={bondMtu}
+                             onChange={e => setBondMtu(e.target.value)}
+                           />
+                        </div>
                     </div>
 
                     <div className="pt-2 border-t border-gray-700 mt-4">

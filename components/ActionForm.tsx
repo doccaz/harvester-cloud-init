@@ -1,14 +1,13 @@
 import React, { useState } from 'react';
 import { ActionType, Phase, CloudAction, WriteFileAction, RunCmdAction, PackageAction, UserAction, ServiceAction } from '../types';
-import { Plus, Package, User, Info, LayoutTemplate } from 'lucide-react';
+import { Plus, Package, User, Info } from 'lucide-react';
 import CodeEditor from './CodeEditor';
 
 interface ActionFormProps {
   onAdd: (action: CloudAction) => void;
-  onOpenTemplates: () => void;
 }
 
-const ActionForm: React.FC<ActionFormProps> = ({ onAdd, onOpenTemplates }) => {
+const ActionForm: React.FC<ActionFormProps> = ({ onAdd }) => {
   const [type, setType] = useState<ActionType>(ActionType.RUN_CMD);
   const [phase, setPhase] = useState<Phase>(Phase.POST_INSTALL);
   
@@ -30,7 +29,7 @@ const ActionForm: React.FC<ActionFormProps> = ({ onAdd, onOpenTemplates }) => {
           ...base, 
           path: commonState.path || '/tmp/file.txt', 
           content: commonState.content || '', 
-          permissions: commonState.permissions || '0640',
+          permissions: commonState.permissions || '0600',
           owner: commonState.owner || '0',
           encoding: 'text',
         } as WriteFileAction;
@@ -174,7 +173,7 @@ const ActionForm: React.FC<ActionFormProps> = ({ onAdd, onOpenTemplates }) => {
              <div className="flex gap-2">
                 <div className="flex-1">
                     <label className="block text-xs text-gray-400 mb-1">Permissions</label>
-                    <input type="text" placeholder="0640" className="w-full bg-gray-900 border border-gray-700 rounded px-3 py-2 text-sm text-gray-200 font-mono" value={commonState.permissions || ''} onChange={(e) => updateField('permissions', e.target.value)} />
+                    <input type="text" placeholder="0600" className="w-full bg-gray-900 border border-gray-700 rounded px-3 py-2 text-sm text-gray-200 font-mono" value={commonState.permissions || ''} onChange={(e) => updateField('permissions', e.target.value)} />
                 </div>
                 <div className="flex-1">
                     <label className="block text-xs text-gray-400 mb-1">Owner</label>
@@ -243,15 +242,6 @@ const ActionForm: React.FC<ActionFormProps> = ({ onAdd, onOpenTemplates }) => {
       </div>
 
       <div className="flex gap-2">
-        <button 
-          onClick={onOpenTemplates}
-          className="bg-gray-700 hover:bg-gray-600 text-gray-200 font-medium py-2 px-4 rounded flex items-center justify-center transition-colors shadow-lg"
-          title="Use a pre-defined template"
-        >
-          <LayoutTemplate size={18} className="mr-2" />
-          Templates
-        </button>
-
         <button 
           onClick={handleAdd}
           className="flex-1 bg-emerald-600 hover:bg-emerald-500 text-white font-medium py-2 rounded flex items-center justify-center transition-colors shadow-lg hover:shadow-emerald-900/20"

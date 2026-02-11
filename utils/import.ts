@@ -104,14 +104,49 @@ const parseConfigObject = (configRoot: any, index: number): { config: CloudInitC
                 if (step.files) {
                     const files = Array.isArray(step.files) ? step.files : [step.files];
                     files.forEach((f: any) => {
+                        let permissions = f.permissions;
+                        if (permissions === undefined || permissions === null) {
+                            permissions = '0600';
+                        } else {
+                            let permStr = String(permissions).trim();
+                            
+                            // If it's 3 digits (e.g. "600", "644", "755"), assume it's missing the leading zero
+                            // because YAML 1.2 parses 0644 as decimal 644 which results in "644" string
+                            if (/^[0-7]{3}$/.test(permStr)) {
+                                permStr = '0' + permStr;
+                            }
+                            
+                            // Validate 4 digit octal
+                            if (/^[0-7]{4}$/.test(permStr)) {
+                                permissions = permStr;
+                            } else {
+                                warnings.push(`Doc ${index + 1}: File "${f.path}" has invalid permissions "${permissions}". Expected 3 or 4-digit octal (e.g. 0600). Resetting to 0600.`);
+                                permissions = '0600';
+                            }
+                        }
+
+                        let owner = f.owner;
+                        // Handle if owner is missing or explicitly 0
+                        if (owner === undefined || owner === null) {
+                            owner = '0';
+                        } else {
+                             // Validate numeric
+                            if (!/^\d+$/.test(String(owner))) {
+                                warnings.push(`Doc ${index + 1}: File "${f.path}" has invalid owner "${owner}". Expected numeric UID (e.g. 0). Resetting to 0.`);
+                                owner = '0';
+                            } else {
+                                owner = String(owner);
+                            }
+                        }
+
                         actions.push({
                             id: Math.random().toString(36).substr(2, 9),
                             phase,
                             type: ActionType.WRITE_FILE,
                             path: f.path,
                             content: f.content,
-                            permissions: f.permissions || '0644',
-                            owner: f.owner || 'root',
+                            permissions: permissions,
+                            owner: owner,
                             encoding: f.encoding === 'b64' ? 'base64' : 'text'
                         } as any);
                     });

@@ -1,7 +1,7 @@
-import React, { useState, useMemo } from 'react';
+import React, { useState, useMemo, useRef } from 'react';
 import { CloudInitConfig } from '../types';
 import { parseAndValidateYaml } from '../utils/import';
-import { FileUp, AlertCircle, CheckCircle, AlertTriangle, ArrowRight, Lightbulb } from 'lucide-react';
+import { FileUp, AlertCircle, CheckCircle, AlertTriangle, ArrowRight, Lightbulb, FolderOpen } from 'lucide-react';
 import CodeEditor from './CodeEditor';
 
 interface ImporterProps {
@@ -11,6 +11,7 @@ interface ImporterProps {
 const Importer: React.FC<ImporterProps> = ({ onImport }) => {
   const [yamlInput, setYamlInput] = useState('');
   const [validationResult, setValidationResult] = useState<any>(null);
+  const fileInputRef = useRef<HTMLInputElement>(null);
 
   const handleValidate = () => {
     const result = parseAndValidateYaml(yamlInput);
@@ -21,6 +22,23 @@ const Importer: React.FC<ImporterProps> = ({ onImport }) => {
     if (validationResult && validationResult.isValid && validationResult.configs) {
       onImport(validationResult.configs);
     }
+  };
+
+  const handleFileUpload = (event: React.ChangeEvent<HTMLInputElement>) => {
+    const file = event.target.files?.[0];
+    if (!file) return;
+
+    const reader = new FileReader();
+    reader.onload = (e) => {
+      const content = e.target?.result;
+      if (typeof content === 'string') {
+        setYamlInput(content);
+        setValidationResult(null);
+      }
+    };
+    reader.readAsText(file);
+    // Reset the input value to allow selecting the same file again
+    event.target.value = '';
   };
 
   const getErrorHint = (error: string) => {
@@ -83,6 +101,20 @@ const Importer: React.FC<ImporterProps> = ({ onImport }) => {
          
         <div className="p-4 bg-gray-900 flex-none z-10 border-t border-gray-800">
           <div className="flex justify-end gap-3">
+             <input 
+                type="file" 
+                ref={fileInputRef}
+                onChange={handleFileUpload}
+                accept=".yaml,.yml,.txt"
+                className="hidden" 
+             />
+             <button 
+                onClick={() => fileInputRef.current?.click()}
+                className="px-4 py-2 text-sm text-gray-300 hover:text-white transition-colors flex items-center bg-gray-800 hover:bg-gray-700 rounded border border-gray-700"
+             >
+                <FolderOpen size={16} className="mr-2" />
+                Import File
+             </button>
              <button 
                 onClick={() => setYamlInput('')}
                 className="px-4 py-2 text-sm text-gray-400 hover:text-white transition-colors"
@@ -110,7 +142,7 @@ const Importer: React.FC<ImporterProps> = ({ onImport }) => {
                <div className="bg-gray-800 w-16 h-16 rounded-full flex items-center justify-center mx-auto mb-4">
                   <FileUp size={24} />
                </div>
-               <p>Paste your YAML and click "Validate" to check for errors and preview the import.</p>
+               <p>Paste your YAML or import a file, then click "Validate".</p>
             </div>
           )}
 

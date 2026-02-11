@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { ActionType, CloudAction, WriteFileAction, RunCmdAction, PackageAction, UserAction, ServiceAction, Phase } from '../types';
-import { ArrowUp, ArrowDown, Trash2, ChevronDown, ChevronRight, FileText, Terminal, Package, User, Settings, Shield, Key, Edit2, X, Save } from 'lucide-react';
+import { ArrowUp, ArrowDown, Trash2, ChevronDown, ChevronRight, FileText, Terminal, Package, User, Settings, Shield, Key, Edit2, X, Save, Copy, Check } from 'lucide-react';
 import CodeEditor from './CodeEditor';
 
 interface ActionItemProps {
@@ -16,6 +16,7 @@ const ActionItem: React.FC<ActionItemProps> = ({ action, index, total, onMove, o
   const [expanded, setExpanded] = useState(false);
   const [isEditing, setIsEditing] = useState(false);
   const [editedAction, setEditedAction] = useState<CloudAction>(action);
+  const [copied, setCopied] = useState(false);
 
   const startEditing = (e: React.MouseEvent) => {
     e.stopPropagation();
@@ -36,13 +37,20 @@ const ActionItem: React.FC<ActionItemProps> = ({ action, index, total, onMove, o
     setEditedAction(action);
   };
 
+  const handleCopy = (e: React.MouseEvent, text: string) => {
+    e.stopPropagation();
+    navigator.clipboard.writeText(text);
+    setCopied(true);
+    setTimeout(() => setCopied(false), 2000);
+  };
+
   const handleTypeChange = (newType: ActionType) => {
     const base = { id: editedAction.id, phase: editedAction.phase, type: newType };
     let newAction: CloudAction;
 
     switch (newType) {
         case ActionType.WRITE_FILE:
-            newAction = { ...base, path: '/tmp/file.txt', content: '', permissions: '0640', owner: '0', encoding: 'text' } as WriteFileAction;
+            newAction = { ...base, path: '/tmp/file.txt', content: '', permissions: '0600', owner: '0', encoding: 'text' } as WriteFileAction;
             break;
         case ActionType.RUN_CMD:
             newAction = { ...base, command: 'echo "hello"' } as RunCmdAction;
@@ -110,8 +118,17 @@ const ActionItem: React.FC<ActionItemProps> = ({ action, index, total, onMove, o
               return (
                   <div className="space-y-1">
                       <div className="text-xs text-gray-500 uppercase font-bold">Command</div>
-                      <div className="bg-gray-950 p-2 rounded border border-gray-800 break-all text-emerald-400 whitespace-pre-wrap">
-                          {(action as RunCmdAction).command}
+                      <div className="relative group bg-gray-950 p-2 rounded border border-gray-800">
+                          <div className="break-all text-emerald-400 whitespace-pre-wrap pr-8">
+                              {(action as RunCmdAction).command}
+                          </div>
+                          <button
+                             onClick={(e) => handleCopy(e, (action as RunCmdAction).command)}
+                             className="absolute top-2 right-2 p-1.5 text-gray-400 hover:text-white bg-gray-800/50 hover:bg-gray-700 rounded transition-all opacity-0 group-hover:opacity-100"
+                             title="Copy Command"
+                          >
+                             {copied ? <Check size={14} className="text-emerald-400" /> : <Copy size={14} />}
+                          </button>
                       </div>
                   </div>
               );

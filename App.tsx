@@ -20,7 +20,8 @@ import {
   Box,
   Menu,
   Layers,
-  Server
+  Server,
+  LayoutTemplate
 } from 'lucide-react';
 
 enum Tab {
@@ -317,13 +318,34 @@ const App: React.FC = () => {
                     )}
                   </div>
 
+                  {/* Template Library CTA */}
+                  <div className="bg-gradient-to-r from-[#092621] to-[#0C322C] border border-[#1A453C] rounded-xl p-5 relative overflow-hidden group shadow-lg">
+                      <div className="absolute top-0 right-0 p-4 opacity-5 group-hover:opacity-10 transition-opacity">
+                          <LayoutTemplate size={80} className="text-[#30BA78]" />
+                      </div>
+                      <h3 className="text-sm uppercase text-[#30BA78] font-bold mb-2 flex items-center relative z-10">
+                          <LayoutTemplate size={16} className="mr-2" />
+                          Template Library
+                      </h3>
+                      <p className="text-xs text-gray-400 mb-4 relative z-10 leading-relaxed">
+                          Quickly add complex configurations like <strong>Network Bonding</strong>, <strong>VLANs</strong>, or <strong>Storage Multipath</strong> using our pre-built wizards.
+                      </p>
+                      <button
+                          onClick={() => setIsTemplateModalOpen(true)}
+                          className="w-full bg-[#30BA78]/10 hover:bg-[#30BA78]/20 border border-[#30BA78]/50 hover:border-[#30BA78] text-[#30BA78] text-sm font-bold py-2 px-4 rounded transition-all flex items-center justify-center relative z-10"
+                      >
+                          <Plus size={16} className="mr-2" />
+                          Open Templates
+                      </button>
+                  </div>
+
                   {/* Add Action Form */}
                   <div className="bg-[#092621] border border-[#1A453C] rounded-xl p-5">
                     <h3 className="text-sm uppercase text-gray-500 font-bold mb-4 flex items-center">
                       <Box size={16} className="mr-2" />
                       New Action
                     </h3>
-                    <ActionForm onAdd={addAction} onOpenTemplates={() => setIsTemplateModalOpen(true)} />
+                    <ActionForm onAdd={addAction} />
                   </div>
                 </div>
 
@@ -415,7 +437,7 @@ const App: React.FC = () => {
 
       {/* Version Footer */}
       <div className="fixed bottom-3 left-6 text-[10px] text-gray-600 font-mono z-50">
-        v1.5.1
+        v1.5.2
       </div>
 
       {/* Diagonal GitHub Ribbon (Bottom Right) */}
